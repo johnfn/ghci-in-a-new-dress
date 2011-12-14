@@ -71,7 +71,7 @@ postGHCIR = do
 
   (postTuples, _) <- runRequestBody
   let content = unescape $ T.unpack (snd $ postTuples !! 0)
-  
+
   liftIO $ print content
 
   result <- liftIO $ queryGHCI content
@@ -119,7 +119,7 @@ sentinel :: String
 sentinel = "1234567890"
 
 readUntilDone hout = do
-    line <- hGetLine hout --remove "Prelude>" from first line.
+    line <- hGetLine hout 
     if sentinel `isInfixOf` line
       then return "\n"
       else go (line ++ "\n")
