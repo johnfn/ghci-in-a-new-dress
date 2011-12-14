@@ -6,6 +6,7 @@ import Yesod
 import Yesod.Static
 import Yesod.Request
 
+import Text.Blaze
 import System.Directory
 import qualified Data.Text as T
 import Data.Maybe
@@ -52,13 +53,26 @@ mkYesod "HelloWorld" [parseRoutes|
 instance Yesod HelloWorld where
     approot _ = ""
 
+unescape :: String -> String
+unescape string = go string ""
+  where
+    go :: String -> String -> String
+    go "" result = result
+    go string result | "\\\\" `isPrefixOf` string = go (drop 2 string) (result ++ "\\")
+    go string result | "&lt;" `isPrefixOf` string = go (drop 4 string) (result ++ "<")
+    go string result | "&gt;" `isPrefixOf` string = go (drop 4 string) (result ++ ">")
+
+    go string result | otherwise = go (drop 1 string) (result ++ [head string])
+
 postGHCIR :: Handler RepHtml
 postGHCIR = do
   -- This is how you get post data. 
   -- type of postTuples is [(Data.Text, Data.Text)] - key value pairs
 
   (postTuples, _) <- runRequestBody
-  let content = T.unpack (snd $ postTuples !! 0)
+  let content = unescape $ T.unpack (snd $ postTuples !! 0)
+  
+  liftIO $ print content
 
   result <- liftIO $ queryGHCI content
   defaultLayout [whamlet|#{result}|]
