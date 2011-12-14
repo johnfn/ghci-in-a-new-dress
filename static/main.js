@@ -66,7 +66,8 @@ $(function() {
       my_position.top += 18;
       var my_value = $.trim(word);
       if (my_value in type_info) {
-        var annotation = my_value + " :: " + type_info[0] + " = " + type_info[1];
+        var vals = type_info[my_value];
+        var annotation = my_value + " :: " + vals[0] + " = " + vals[1];
         $("#typeannotations").css(my_position).show().html(annotation)
       }
     }).mouseleave(function(){

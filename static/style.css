@@ -30,4 +30,5 @@ ul#autocomplete {
 #typeannotations {
   position: absolute;
   border: 1px solid gray;
+  background-color: #fff;
 }
