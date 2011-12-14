@@ -3,9 +3,9 @@
 
 ## Features
 
-* Autocomplete - DONE.
-* Calltips
-* Syntax highlight - DONE.
+* Autocomplete - *DONE*
+* Calltips - *DONE*
+* Syntax highlight - *DONE*
 * (Potentially) advanced syntax highlighting (type colors)
 * Data types via file import
 * Remove let ... in syntax
