@@ -15,6 +15,12 @@ import Control.Monad
 import Data.IORef
 import System.IO.Unsafe
 
+{- TODO
+ - Actually send stuff from JavaScript land.
+ - Do some preliminary syntax highlighting (just basic keywords)
+ -
+ -}
+
 data HelloWorld = HelloWorld { helloWorldStatic :: Static }
 
 {- This is Bad, Dirty, Evil, Not Good, etc. Fix if time.  The
@@ -95,7 +101,18 @@ readIntro hout = do
     then return ()
     else readIntro hout
 
--- This only works if the result is one line long, which may not be the case.
+sentinel :: String
+sentinel = "1234567890"
+
+readUntilDone hout = 
+    go ""
+  where
+    go resultSoFar = do
+      line <- hGetLine hout
+
+      if sentinel `isInfixOf` line
+        then return (resultSoFar ++ line)
+        else go (resultSoFar ++ line)
 
 queryGHCI :: String -> IO String
 queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n"
@@ -104,11 +121,16 @@ queryGHCI input = do
   hout <- readIORef hOutGHCI
 
   hPutStr hin input
-  output <- hGetLine hout
+  -- This is a hack that lets us discover where the end of the output is.
+  hPutStr hin (":t " ++ sentinel ++ "\n")
+
+  output <- readUntilDone hout
   return output
 
 main :: IO ()
 main = do
+  {- TODO: I think that ghci sometimes uses stderr, so I guess we should go
+   - ahead and read from that one too. -}
   (Just hin, Just hout, _, _) <- createProcess (proc "ghci" []) { std_out = CreatePipe, std_in = CreatePipe }
 
   hSetBuffering hin NoBuffering
