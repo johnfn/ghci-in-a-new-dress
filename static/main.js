@@ -73,14 +73,14 @@ $(function() {
     var $old_elem = $("#active");
     var $new_elem = $old_elem.clone();
 
-    $new_elem.children("#content").html(content);
-
     if (yours) {
       $("#console").append($new_elem);
       $old_elem.attr("id", ""); //remove #active id.
       $old_elem.children("#cursor").remove();
       add_colors($old_elem.children("#content"));
+      $new_elem.children("#content").html("");
     } else {
+      $new_elem.children("#content").html(content);
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
       $new_elem.insertBefore($("#console #active"));
