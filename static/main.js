@@ -1,10 +1,11 @@
 $(function() {
   var BACKSPACE = 8;
+  var TAB       = 9;
   var ENTER     = 13;
 
   var ticks = 0;
-
   var autocomplete_info = {};
+  var showing_calltips = false;
 
   var blink_cursor = function() {
     ++ticks;
@@ -175,6 +176,12 @@ $(function() {
     }
   }
 
+  var autocomplete = function() {
+    var completed_word = $($("#autocomplete :first-child")[0]).text();
+    var rest = completed_word.slice(current_word().length);
+    $("#active #content").html($("#active #content").html() + rest + " ");
+  }
+
   /* Call to send output "through the socket" (which is really not a socket at
    * all and is instead just AJAX. */
   var add_to_console = function(value) {
@@ -184,6 +191,7 @@ $(function() {
 
     if (value == ENTER) {
       add_output_line(old_html);
+      showing_calltips = false;
       return;
     } else if (value == BACKSPACE) {
       if (old_html.length == 0) {
@@ -191,6 +199,8 @@ $(function() {
       }
 
       new_html = old_html.slice(0, old_html.length - 1);
+    } else if (value == TAB) { 
+      autocomplete();
     } else {
       new_html = old_html + value;
     }
@@ -210,6 +220,9 @@ $(function() {
       add_to_console(BACKSPACE);
     } else if (e.which == ENTER) {
       add_to_console(ENTER);
+    } else if (e.which == TAB) {
+      e.preventDefault();
+      autocomplete();
     }
   });
 

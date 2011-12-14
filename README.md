@@ -26,4 +26,4 @@
 
 ## TODO
 
-* Need to clear out input on enter.
+* Kind of worried about how it seems like giand is crashing my computer. Should look into this...
