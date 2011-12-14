@@ -23,6 +23,38 @@ $(function() {
     $("#autocomplete").css(cursor_position);
   }
 
+  var list_to_dict = function(list) {
+    var result = {};
+    for (var i = 0; i < list.length; i++){
+      result[list[i]] = true;
+    }
+    return result;
+  }
+
+  var surround_keyword = function(word) {
+    return "<span class='keyword'>" + word + "</span>";
+  }
+
+  var add_colors = function(element) {
+    var contents = element.html().split(' ');
+    var keyword_list = [ 'if', 'then', 'else' ];
+    var keyword_dict = list_to_dict(keyword_list);
+    var result_text = "";
+
+    for (var i = 0; i < contents.length; i++) {
+      var word = $.trim(contents[i]);
+
+      if (word in keyword_dict) {
+        result_text += surround_keyword(word);
+      } else {
+        result_text += word;
+      }
+      result_text += " ";
+    }
+
+    element.html(result_text);
+  }
+
   /* 
    * Generic way to add a new line to the console. `yours` indicates whether it
    * "belongs to you" - i.e., whether the cursor should be on it or not. 
@@ -37,12 +69,25 @@ $(function() {
       $("#console").append($new_elem);
       $old_elem.attr("id", ""); //remove #active id.
       $old_elem.children("#cursor").remove();
+      add_colors($old_elem.children("#content"));
     } else {
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
       $new_elem.insertBefore($("#console #active"));
       $new_elem.children("#prompt").remove();
+      add_colors($new_elem.children("#content"));
     }
+  }
+
+  /* sends `content` as an ajax request to `link`, calling `callback`
+   * when we receive data from the request. */
+  var send_to_server = function(content, link, callback) {
+    $.ajax({
+      type: 'POST',
+      url: "/" + link,
+      data: {'data' : content},
+      success: callback
+    });
   }
 
   var add_output_line = function(content) {
