@@ -3,9 +3,9 @@
 
 ## Features
 
-* Autocomplete - *DONE*
-* Calltips - *DONE*
-* Syntax highlight - *DONE*
+* Autocomplete - **DONE**
+* Calltips - **DONE**
+* Syntax highlight - **DONE**
 * (Potentially) advanced syntax highlighting (type colors)
 * Data types via file import
 * Remove let ... in syntax
@@ -28,3 +28,4 @@
 
 * Kind of worried about how it seems like giand is crashing my computer. Should look into this...
 * Multiline inputs
+* Remove &gt; and &lt; stuff. I REALLY need a way to figure out how to send plaintext!.
