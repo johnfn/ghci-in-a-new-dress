@@ -16,12 +16,6 @@ import Control.Monad
 import Data.IORef
 import System.IO.Unsafe
 
-{- TODO
- - Actually send stuff from JavaScript land.
- - Do some preliminary syntax highlighting (just basic keywords)
- -
- -}
-
 data HelloWorld = HelloWorld { helloWorldStatic :: Static }
 
 {- This is Bad, Dirty, Evil, Not Good, etc. Fix if time.  The
