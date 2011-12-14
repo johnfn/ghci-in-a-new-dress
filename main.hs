@@ -87,7 +87,6 @@ getHomeR = do
           $
         </span>
         <span id="content">
-          This is a console.
         </span>
         <span id="cursor">_</span>
       </div>
