@@ -77,10 +77,9 @@ getHomeR = do
   </head>
   <body>
     <ul id="autocomplete"> 
-      <li>something</li>
-      <li>other thing</li>
     </ul>
-
+    <div id="calltips">
+    </div>
     <div id="console">
       <div id="active">
         <span id="prompt">
