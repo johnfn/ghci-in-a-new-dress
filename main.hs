@@ -6,6 +6,8 @@ import Yesod
 import Yesod.Static
 import Yesod.Request
 
+import Text.Blaze
+import System.Directory
 import qualified Data.Text as T
 import Data.Maybe
 import Control.Concurrent
@@ -15,12 +17,6 @@ import Data.List
 import Control.Monad
 import Data.IORef
 import System.IO.Unsafe
-
-{- TODO
- - Actually send stuff from JavaScript land.
- - Do some preliminary syntax highlighting (just basic keywords)
- -
- -}
 
 data HelloWorld = HelloWorld { helloWorldStatic :: Static }
 
@@ -57,13 +53,26 @@ mkYesod "HelloWorld" [parseRoutes|
 instance Yesod HelloWorld where
     approot _ = ""
 
+unescape :: String -> String
+unescape string = go string ""
+  where
+    go :: String -> String -> String
+    go "" result = result
+    go string result | "\\\\" `isPrefixOf` string = go (drop 2 string) (result ++ "\\")
+    go string result | "&lt;" `isPrefixOf` string = go (drop 4 string) (result ++ "<")
+    go string result | "&gt;" `isPrefixOf` string = go (drop 4 string) (result ++ ">")
+
+    go string result | otherwise = go (drop 1 string) (result ++ [head string])
+
 postGHCIR :: Handler RepHtml
 postGHCIR = do
   -- This is how you get post data. 
   -- type of postTuples is [(Data.Text, Data.Text)] - key value pairs
 
   (postTuples, _) <- runRequestBody
-  let content = T.unpack (snd $ postTuples !! 0)
+  let content = unescape $ T.unpack (snd $ postTuples !! 0)
+  
+  liftIO $ print content
 
   result <- liftIO $ queryGHCI content
   defaultLayout [whamlet|#{result}|]
@@ -113,7 +122,7 @@ readUntilDone hout = do
     line <- hGetLine hout --remove "Prelude>" from first line.
     if sentinel `isInfixOf` line
       then return "\n"
-      else go ((drop 8 line) ++ "\n")
+      else go (line ++ "\n")
   where
     go resultSoFar = do
       line <- hGetLine hout
@@ -121,6 +130,14 @@ readUntilDone hout = do
       if sentinel `isInfixOf` line
         then return (resultSoFar)
         else go (resultSoFar ++ line ++ "\n")
+
+handleDataInput input hin hout = do
+  writeFile "temp.hs" input
+  hPutStr hin ":load temp.hs\n"
+  hPutStr hin (":t " ++ sentinel ++ "\n")
+  output <- readUntilDone hout
+
+  removeFile "temp.hs"
 
 queryGHCI :: String -> IO String
 queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n"
@@ -132,7 +149,10 @@ queryGHCI input = do
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
 
-  hPutStr hin input
+  if "data " `isPrefixOf` input
+    then handleDataInput input hin hout
+    else hPutStr hin input
+  
   -- This is a hack that lets us discover where the end of the output is.
   -- We will keep reading until we see the sentinel.
   hPutStr hin (":t " ++ sentinel ++ "\n")

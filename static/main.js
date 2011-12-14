@@ -57,21 +57,37 @@ $(function() {
   }
 
   var uid = 0;
+  var colors = ["red", "blue", "green"];
+  var color_idx = 0;
+  var color_dict = {};
 
   var get_uid = function() {
     return uid++;
   }
 
+  var get_color = function(type) {
+    if (!(type in color_dict)) {
+      color_dict[type] = colors[++color_idx % colors.length];
+    }
+
+    return color_dict[type];
+  }
+
   var surround_word = function(word) {
-    var $elem = $("<span id='" + get_uid() + "'>" + word + "</span>");
+    var $elem = $("<span;id='" + get_uid() + "'>" + word + "</span>");
+    var my_value = $.trim(word);
+
+    if (my_value in type_info){
+      $elem.css('color', get_color(type_info[my_value][0]));
+    }
+
     $elem.mousedown(function(){
       var my_position = $elem.offset();
       my_position.top += 18;
-      var my_value = $.trim(word);
       if (my_value in type_info) {
         var vals = type_info[my_value];
         var annotation = my_value + " :: " + vals[0] + " = " + vals[1];
-        $("#typeannotations").css(my_position).show().html(annotation)
+        var elem = $("#typeannotations").css(my_position).show().html(annotation);
       }
     }).mouseleave(function(){
       $("#typeannotations").hide();
@@ -108,15 +124,17 @@ $(function() {
       $("#console").append($new_elem);
       $old_elem.attr("id", ""); //remove #active id.
       $old_elem.children("#cursor").remove();
-      add_colors($old_elem.children("#content"));
       $new_elem.children("#content").html("");
+
+      do_type_annotations($old_elem.children("#content"));
     } else {
       $new_elem.children("#content").html(content);
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
       $new_elem.insertBefore($("#console #active"));
       $new_elem.children("#prompt").remove();
-      add_colors($new_elem.children("#content"));
+
+      do_type_annotations($new_elem.children("#content"));
     }
   }
 
@@ -157,8 +175,8 @@ $(function() {
   }
 
   var add_output_line = function(content) {
-    add_line(content, true);
     send_to_server(content, function(data){
+      add_line(content, true);
       add_line(data, false);
     });
   }
@@ -211,7 +229,7 @@ $(function() {
     }
   }
 
-  var do_type_annotations = function() {
+  var do_type_annotations = function(elem) {
     send_to_server(":show bindings\n", function(data){
       var lines = data.split("\n");
       type_info = {};
@@ -222,6 +240,8 @@ $(function() {
         if (match === null) continue;
         type_info[match[1]] = [match[2], match[3]];
       }
+
+      add_colors(elem);
     });
   }
 
@@ -245,7 +265,6 @@ $(function() {
     if (value == ENTER) {
       add_output_line(old_html);
       showing_calltips = false;
-      do_type_annotations();
       return;
     } else if (value == BACKSPACE) {
       if (old_html.length == 0) {
