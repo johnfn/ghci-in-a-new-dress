@@ -5,7 +5,9 @@ $(function() {
 
   var ticks = 0;
   var autocomplete_info = {};
+
   var showing_calltips = false;
+  var calltips_word = "";
 
   var blink_cursor = function() {
     ++ticks;
@@ -19,6 +21,14 @@ $(function() {
         $("#cursor").css({'color': 'white'});
       }
     }
+  }
+
+  var move_calltips_box = function() {
+    var cursor_position = $("#cursor").offset();
+    //No idea why I have to offset this one but not the other.
+
+    cursor_position.top += 18;
+    $("#calltips").css(cursor_position);
   }
 
   var move_autocomplete = function() {
@@ -150,6 +160,11 @@ $(function() {
 
   var show_autocomplete = function(list, is_calltips) {
     var autocomplete_visible = false;
+    if (showing_calltips) {
+      $("#autocomplete").hide();
+      return;
+    }
+
     $("#autocomplete").children().remove();
 
     //TODO: Sort alphabetically.
@@ -180,6 +195,10 @@ $(function() {
     var completed_word = $($("#autocomplete :first-child")[0]).text();
     var rest = completed_word.slice(current_word().length);
     $("#active #content").html($("#active #content").html() + rest + " ");
+
+    showing_calltips = true;
+    calltips_word = $.trim(completed_word);
+    move_calltips_box();
   }
 
   /* Call to send output "through the socket" (which is really not a socket at
@@ -226,8 +245,19 @@ $(function() {
     }
   });
 
+  var show_calltips = function() {
+    if (!showing_calltips) {
+      $("#calltips").hide();
+      return;
+    }
+    $("#calltips").show();
+    $("#calltips").html(autocomplete_info[calltips_word]);
+    
+  }
+
   setInterval(function(){
     show_autocomplete(dict_to_list(autocomplete_info), false);
+    show_calltips();
     blink_cursor();
   }, 100);
 
