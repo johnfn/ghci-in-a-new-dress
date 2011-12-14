@@ -2,6 +2,11 @@ body {
   font-family: "courier new";
 }
 
+/* There could be many of these. */
+.keyword {
+  font-weight: bold;
+}
+
 ul#autocomplete {
   position: absolute;
   border: 1px solid gray;
