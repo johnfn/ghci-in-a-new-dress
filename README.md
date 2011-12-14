@@ -5,7 +5,7 @@
 
 * Autocomplete
 * Calltips
-* <strike>Syntax highlight</strike>
+* Syntax highlight - DONE.
 * (Potentially) advanced syntax highlighting (type colors)
 * Data types via file import
 * Remove let ... in syntax
