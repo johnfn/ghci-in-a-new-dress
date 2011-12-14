@@ -6,6 +6,7 @@ import Yesod
 import Yesod.Static
 import Yesod.Request
 
+import System.Directory
 import qualified Data.Text as T
 import Data.Maybe
 import Control.Concurrent
@@ -116,6 +117,14 @@ readUntilDone hout = do
         then return (resultSoFar)
         else go (resultSoFar ++ line ++ "\n")
 
+handleDataInput input hin hout = do
+  writeFile "temp.hs" input
+  hPutStr hin ":load temp.hs\n"
+  hPutStr hin (":t " ++ sentinel ++ "\n")
+  output <- readUntilDone hout
+
+  removeFile "temp.hs"
+
 queryGHCI :: String -> IO String
 queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n"
 queryGHCI input = do
@@ -126,7 +135,10 @@ queryGHCI input = do
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
 
-  hPutStr hin input
+  if "data " `isPrefixOf` input
+    then handleDataInput input hin hout
+    else hPutStr hin input
+  
   -- This is a hack that lets us discover where the end of the output is.
   -- We will keep reading until we see the sentinel.
   hPutStr hin (":t " ++ sentinel ++ "\n")
