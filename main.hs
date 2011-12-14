@@ -3,6 +3,8 @@
 
 
 import Yesod
+import Yesod.Static
+
 import System.Process
 import IO
 import Data.List
@@ -10,7 +12,7 @@ import Control.Monad
 import Data.IORef
 import System.IO.Unsafe
 
-data HelloWorld = HelloWorld
+data HelloWorld = HelloWorld { helloWorldStatic :: Static }
 
 {- This is Bad, Dirty, Evil, Not Good, etc. Fix if time.  The
  - difficulty is that we need a way to share variables between
@@ -20,6 +22,8 @@ data HelloWorld = HelloWorld
  - Reading material: http://www.haskell.org/haskellwiki/Top_level_mutable_state
  -}
 
+-- TODO: This isn't HelloWorld any more, Dorthy
+
 hInGHCI :: IORef Handle
 {-# NOINLINE hInGHCI #-}
 hInGHCI = unsafePerformIO (newIORef undefined)
@@ -28,10 +32,11 @@ hOutGHCI :: IORef Handle
 {-# NOINLINE hOutGHCI #-}
 hOutGHCI = unsafePerformIO (newIORef undefined)
 
-
+staticFiles "static"
 
 mkYesod "HelloWorld" [parseRoutes|
-/ HomeR GET
+/       HomeR   GET
+/static StaticR Static helloWorldStatic
 |]
 
 instance Yesod HelloWorld where
@@ -71,4 +76,6 @@ main = do
   writeIORef hInGHCI hin
   writeIORef hOutGHCI hout
 
-  warpDebug 3000 HelloWorld
+  s <- static "static"
+
+  warpDebug 3000 $ HelloWorld s
