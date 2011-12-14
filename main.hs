@@ -8,6 +8,7 @@ import Yesod.Request
 
 import qualified Data.Text as T
 import Data.Maybe
+import Control.Concurrent
 import System.Process
 import IO
 import Data.List
@@ -40,6 +41,10 @@ hInGHCI = unsafePerformIO (newIORef undefined)
 hOutGHCI :: IORef Handle
 {-# NOINLINE hOutGHCI #-}
 hOutGHCI = unsafePerformIO (newIORef undefined)
+
+lockGHCI :: MVar Bool
+{-# NOINLINE lockGHCI #-}
+lockGHCI = unsafePerformIO (newMVar True)
 
 staticFiles "static"
 
@@ -107,7 +112,7 @@ sentinel = "1234567890"
 readUntilDone hout = do
     line <- hGetLine hout --remove "Prelude>" from first line.
     if sentinel `isInfixOf` line
-      then return ""
+      then return "\n"
       else go ((drop 8 line) ++ "\n")
   where
     go resultSoFar = do
@@ -120,6 +125,10 @@ readUntilDone hout = do
 queryGHCI :: String -> IO String
 queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n"
 queryGHCI input = do
+  -- Lock this function. Only 1 person can query
+  -- ghci at a time.
+  _ <- takeMVar lockGHCI
+
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
 
@@ -129,6 +138,8 @@ queryGHCI input = do
   hPutStr hin (":t " ++ sentinel ++ "\n")
 
   output <- readUntilDone hout
+
+  putMVar lockGHCI True
   return output
 
 main :: IO ()
