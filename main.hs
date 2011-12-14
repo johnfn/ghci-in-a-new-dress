@@ -36,17 +36,48 @@ staticFiles "static"
 
 mkYesod "HelloWorld" [parseRoutes|
 /       HomeR   GET
+/ghci   GHCIR   GET
 /static StaticR Static helloWorldStatic
 |]
 
 instance Yesod HelloWorld where
     approot _ = ""
 
+getGHCIR :: Handler RepHtml
+getGHCIR = do
+  defaultLayout [whamlet|test|]
+
 getHomeR :: Handler RepHtml
 getHomeR = do
-  result <- liftIO $ queryGHCi ":t 5.0\n"
+  result <- liftIO $ queryGHCI ":t 5.0\n"
   liftIO $ print result
-  defaultLayout [whamlet|Hello World!|]
+  defaultLayout [whamlet|
+<html>
+  <head>
+    <title> ghci in a new dress </title>
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"> </script>
+    <script src="static/main.js"> </script>
+  </head>
+  <body>
+    <ul id="autocomplete"> 
+      <li>something</li>
+      <li>other thing</li>
+    </ul>
+
+    <div id="console">
+      <div id="active">
+        <span id="prompt">
+          $
+        </span>
+        <span id="content">
+          This is a console.
+        </span>
+        <span id="cursor">_</span>
+      </div>
+    </div>
+  </body>
+</html>|]
 
 readIntro hout = do
   line <- hGetLine hout
@@ -55,7 +86,7 @@ readIntro hout = do
     else readIntro hout
 
 -- This only works if the result is one line long, which may not be the case.
-queryGHCi input = do
+queryGHCI input = do
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
 
