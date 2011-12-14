@@ -106,7 +106,9 @@ sentinel = "1234567890"
 
 readUntilDone hout = do
     line <- hGetLine hout --remove "Prelude>" from first line.
-    go (drop 8 line)
+    if sentinel `isInfixOf` line
+      then return ""
+      else go (drop 8 line)
   where
     go resultSoFar = do
       line <- hGetLine hout
@@ -123,6 +125,7 @@ queryGHCI input = do
 
   hPutStr hin input
   -- This is a hack that lets us discover where the end of the output is.
+  -- We will keep reading until we see the sentinel.
   hPutStr hin (":t " ++ sentinel ++ "\n")
 
   output <- readUntilDone hout
