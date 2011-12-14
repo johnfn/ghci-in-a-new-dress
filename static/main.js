@@ -59,7 +59,7 @@ $(function() {
     return uid++;
   }
 
-  var surround_keyword = function(word) {
+  var surround_word = function(word) {
     var $elem = $("<span id='" + get_uid() + "'>" + word + "</span>");
     $elem.mousedown(function(){
       var my_position = $elem.offset();
@@ -89,7 +89,7 @@ $(function() {
     for (var i = 0; i < contents.length; i++) {
       var word = $.trim(contents[i]) + " ";
 
-      element.append(surround_keyword(word));
+      element.append(surround_word(word));
     }
   }
 
