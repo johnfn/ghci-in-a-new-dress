@@ -1,0 +1,13 @@
+body {
+  font-family: "courier new";
+}
+
+ul#autocomplete {
+  position: absolute;
+  border: 1px solid gray;
+  margin-left: 0px;
+  padding-left: 5px;
+  width: 200px;
+  overflow: auto;
+  list-style-type: none;
+}
