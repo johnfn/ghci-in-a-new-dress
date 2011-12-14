@@ -83,13 +83,14 @@ $(function() {
   /* sends `content` as an ajax request to `link`, calling `callback`
    * when we receive data from the request. */
   var send_to_server = function(content, callback) {
-    var strip_and_callback = function(content){
+    var strip_and_callback = function(content) {
       var initial_crap = "<!DOCTYPE html>\n <html><head><title></title></head><body>";
       var final_crap   = "</body></html>";
 
       var stripped_content = content.slice(initial_crap.length, content.length - final_crap.length);
       callback(stripped_content);
     }
+
     $.ajax({
       type: 'POST',
       url: "/ghci",
@@ -107,6 +108,9 @@ $(function() {
 
   var add_output_line = function(content) {
     add_line(content, true);
+    send_to_server(content, function(data){
+      add_line(data, false);
+    });
   }
 
   /* Call to insert new output (presumably from ghci) into the console. */
@@ -138,19 +142,13 @@ $(function() {
 
   /* Call to send output "through the socket" (which is really not a socket at
    * all and is instead just AJAX. */
-  var send = function(code) {
-    //TODO: AJAX stuff.
-    
-    add_output_line("");
-  }
-
   var add_to_console = function(value) {
     var $content = $("#active #content");
     var old_html = $content.html();
     var new_html;
 
     if (value == ENTER) {
-      send(old_html);
+      add_output_line(old_html);
       return;
     } else if (value == BACKSPACE) {
       if (old_html.length == 0) {
