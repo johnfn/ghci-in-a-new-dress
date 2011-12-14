@@ -10,6 +10,9 @@ $(function() {
   var showing_calltips = false;
   var calltips_word = "";
 
+  // Debugging utilities
+  var log = function(){ console.log.apply(console, arguments)};
+
   var blink_cursor = function() {
     ++ticks;
     if (ticks % 3 == 0) {
@@ -260,10 +263,7 @@ $(function() {
     move_autocomplete();
   }
 
-  $(document).bind('keypress', function(e) {
-    key = String.fromCharCode(e.which);
-    add_to_console(key);
-  });
+
 
   /* Backspace cannot be detected by a keypress event. */
   $(document).bind('keydown', function(e) {
@@ -275,6 +275,11 @@ $(function() {
       e.preventDefault();
       autocomplete();
     }
+  });
+
+  $(document).bind('keypress', function(e) {
+    key = String.fromCharCode(e.which);
+    add_to_console(key);
   });
 
   var show_calltips = function() {
