@@ -3,7 +3,7 @@
 
 ## Features
 
-* Autocomplete
+* Autocomplete - DONE.
 * Calltips
 * Syntax highlight - DONE.
 * (Potentially) advanced syntax highlighting (type colors)

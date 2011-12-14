@@ -5,7 +5,6 @@ $(function() {
   var ticks = 0;
 
   var autocomplete_info = {};
-  var autocomplete_visible = false;
 
   var blink_cursor = function() {
     ++ticks;
@@ -24,18 +23,20 @@ $(function() {
   var move_autocomplete = function() {
     var cursor_position = $("#cursor").offset();
     $("#autocomplete").css(cursor_position);
-
-    if (autocomplete_visible) {
-      $("#autocomplete").show();
-    } else {
-      $("#autocomplete").hide();
-    }
   }
 
   var list_to_dict = function(list) {
     var result = {};
     for (var i = 0; i < list.length; i++){
       result[list[i]] = true;
+    }
+    return result;
+  }
+
+  var dict_to_list = function(dict) {
+    var result = [];
+    for (var x in dict) {
+      result.push(x);
     }
     return result;
   }
@@ -110,8 +111,18 @@ $(function() {
   /* TODO: Should also be called when user loads in new modules. */
   var populate_autocomplete = function() {
     send_to_server(":browse", function(data){
-      console.log(data);
-    })
+      var lines = data.split("\n");
+      for (var i = 0; i < lines.length; i++){
+        var line = lines[i];
+        //autocomplete_info["map"] = "(a -> b) -> [a] -> [b]"
+
+        var browse_info = /([a-zA-Z_0-9]+) :: (.+)/g;
+        var match = browse_info.exec(line);
+        if (match === null) continue;
+
+        autocomplete_info[match[1]] = match[2];
+      }
+    });
   }
 
   var add_output_line = function(content) {
@@ -137,14 +148,30 @@ $(function() {
   }
 
   var show_autocomplete = function(list, is_calltips) {
+    var autocomplete_visible = false;
     $("#autocomplete").children().remove();
 
+    //TODO: Sort alphabetically.
     for (var i = 0; i < list.length; i++) {
       if (starts_with(list[i], current_word())) {
+        autocomplete_visible = true;
+
         $("#autocomplete").append($("<li><b>" + list[i].slice(0, current_word().length) + "</b>" + list[i].slice(current_word().length, list[i].length) + "</li>"));
-      } else {
-        $("#autocomplete").append($("<li>" + list[i] + "</li>"));
       }
+    }
+
+    if (current_word() == "") {
+      autocomplete_visible = false;
+    }
+
+    if (autocomplete_visible) {
+      $("#autocomplete").show();
+    } else {
+      $("#autocomplete").hide();
+    }
+
+    if (autocomplete_visible) {
+      move_autocomplete();
     }
   }
 
@@ -187,8 +214,7 @@ $(function() {
   });
 
   setInterval(function(){
-    show_autocomplete(["one thing", "another thing", "a third thing"], false);
-    move_autocomplete();
+    show_autocomplete(dict_to_list(autocomplete_info), false);
     blink_cursor();
   }, 100);
 
