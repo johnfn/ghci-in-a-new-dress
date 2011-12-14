@@ -3,7 +3,9 @@ $(function() {
   var ENTER     = 13;
 
   var ticks = 0;
+
   var autocomplete_info = {};
+  var autocomplete_visible = false;
 
   var blink_cursor = function() {
     ++ticks;
@@ -22,6 +24,12 @@ $(function() {
   var move_autocomplete = function() {
     var cursor_position = $("#cursor").offset();
     $("#autocomplete").css(cursor_position);
+
+    if (autocomplete_visible) {
+      $("#autocomplete").show();
+    } else {
+      $("#autocomplete").hide();
+    }
   }
 
   var list_to_dict = function(list) {
@@ -180,6 +188,7 @@ $(function() {
 
   setInterval(function(){
     show_autocomplete(["one thing", "another thing", "a third thing"], false);
+    move_autocomplete();
     blink_cursor();
   }, 100);
 

@@ -23,3 +23,7 @@
 * Open websocket to server
 * Webserver (Haskell/Yesod)
 * GHC API or GHCI (run as a process). Better use the API. http://www.haskell.org/ghc/docs/latest/html/libraries/ghc/index.html https://github.com/ghc/ghc/blob/master/ghc/InteractiveUI.hs
+
+## TODO
+
+* Need to clear out input on enter.
