@@ -108,7 +108,7 @@ readUntilDone hout = do
     line <- hGetLine hout --remove "Prelude>" from first line.
     if sentinel `isInfixOf` line
       then return "\n"
-      else go ((drop 8 line) ++ "\n")
+      else go (line ++ "\n")
   where
     go resultSoFar = do
       line <- hGetLine hout
