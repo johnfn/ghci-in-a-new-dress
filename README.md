@@ -27,3 +27,4 @@
 ## TODO
 
 * Kind of worried about how it seems like giand is crashing my computer. Should look into this...
+* Multiline inputs
