@@ -4,7 +4,10 @@
 
 import Yesod
 import Yesod.Static
+import Yesod.Request
 
+import qualified Data.Text as T
+import Data.Maybe
 import System.Process
 import IO
 import Data.List
@@ -36,16 +39,23 @@ staticFiles "static"
 
 mkYesod "HelloWorld" [parseRoutes|
 /       HomeR   GET
-/ghci   GHCIR   GET
+/ghci   GHCIR   POST
 /static StaticR Static helloWorldStatic
 |]
 
 instance Yesod HelloWorld where
     approot _ = ""
 
-getGHCIR :: Handler RepHtml
-getGHCIR = do
-  defaultLayout [whamlet|test|]
+postGHCIR :: Handler RepHtml
+postGHCIR = do
+  -- This is how you get post data. 
+  -- type of postTuples is [(Data.Text, Data.Text)] - key value pairs
+
+  (postTuples, _) <- runRequestBody
+  let content = T.unpack (snd $ postTuples !! 0)
+
+  result <- liftIO $ queryGHCI content
+  defaultLayout [whamlet|#{result}|]
 
 getHomeR :: Handler RepHtml
 getHomeR = do
@@ -86,6 +96,9 @@ readIntro hout = do
     else readIntro hout
 
 -- This only works if the result is one line long, which may not be the case.
+
+queryGHCI :: String -> IO String
+queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n"
 queryGHCI input = do
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
