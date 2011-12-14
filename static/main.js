@@ -3,6 +3,7 @@ $(function() {
   var ENTER     = 13;
 
   var ticks = 0;
+  var autocomplete_info = {};
 
   var blink_cursor = function() {
     ++ticks;
@@ -81,13 +82,27 @@ $(function() {
 
   /* sends `content` as an ajax request to `link`, calling `callback`
    * when we receive data from the request. */
-  var send_to_server = function(content, link, callback) {
+  var send_to_server = function(content, callback) {
+    var strip_and_callback = function(content){
+      var initial_crap = "<!DOCTYPE html>\n <html><head><title></title></head><body>";
+      var final_crap   = "</body></html>";
+
+      var stripped_content = content.slice(initial_crap.length, content.length - final_crap.length);
+      callback(stripped_content);
+    }
     $.ajax({
       type: 'POST',
-      url: "/" + link,
+      url: "/ghci",
       data: {'data' : content},
-      success: callback
+      success: strip_and_callback
     });
+  }
+
+  /* TODO: Should also be called when user loads in new modules. */
+  var populate_autocomplete = function() {
+    send_to_server(":browse", function(data){
+      console.log(data);
+    })
   }
 
   var add_output_line = function(content) {
@@ -169,4 +184,10 @@ $(function() {
     show_autocomplete(["one thing", "another thing", "a third thing"], false);
     blink_cursor();
   }, 100);
+
+  function initialize() {
+    populate_autocomplete();
+  }
+
+  initialize();
 });
