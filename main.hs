@@ -104,15 +104,16 @@ readIntro hout = do
 sentinel :: String
 sentinel = "1234567890"
 
-readUntilDone hout = 
-    go ""
+readUntilDone hout = do
+    line <- hGetLine hout --remove "Prelude>" from first line.
+    go (drop 8 line)
   where
     go resultSoFar = do
       line <- hGetLine hout
 
       if sentinel `isInfixOf` line
-        then return (resultSoFar ++ line)
-        else go (resultSoFar ++ line)
+        then return (resultSoFar)
+        else go (resultSoFar ++ line ++ "\n")
 
 queryGHCI :: String -> IO String
 queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n"
