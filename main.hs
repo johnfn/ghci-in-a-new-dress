@@ -177,6 +177,6 @@ main = do
   writeIORef hInGHCI hin
   writeIORef hOutGHCI hout
 
-  s <- static "static"
+  s <- staticDevel "static"
 
   warpDebug 3000 $ HelloWorld s

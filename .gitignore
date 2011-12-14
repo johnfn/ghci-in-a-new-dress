@@ -1,2 +1,16 @@
 *.aes
 *.sw?
+
+# Haskell
+dist
+cabal-dev
+*.o
+*.hi
+*.chi
+*.chs.h
+
+# Temporary directories
+inspiration
+
+# Binaries
+main

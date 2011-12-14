@@ -1,4 +1,11 @@
 
+# Dependencies
+
+* Yesod
+* Hoogle
+
+This should be a .cabal file.
+
 # Running
 
 ## Features
