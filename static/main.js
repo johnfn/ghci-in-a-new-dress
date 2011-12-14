@@ -127,7 +127,7 @@ $(function() {
         var line = lines[i];
         //autocomplete_info["map"] = "(a -> b) -> [a] -> [b]"
 
-        var browse_info = /([a-zA-Z_0-9]+) :: (.+)/g;
+        var browse_info = /(.+) :: (.+)/g;
         var match = browse_info.exec(line);
         if (match === null) continue;
 
