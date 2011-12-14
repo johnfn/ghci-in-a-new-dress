@@ -5,6 +5,7 @@ $(function() {
 
   var ticks = 0;
   var autocomplete_info = {};
+  var type_info = {};
 
   var showing_calltips = false;
   var calltips_word = "";
@@ -52,8 +53,28 @@ $(function() {
     return result;
   }
 
+  var uid = 0;
+
+  var get_uid = function() {
+    return uid++;
+  }
+
   var surround_keyword = function(word) {
-    return "<span class='keyword'>" + word + "</span>";
+    var $elem = $("<span id='" + get_uid() + "'>" + word + "</span>");
+    $elem.mousedown(function(){
+      var my_position = $elem.offset();
+      my_position.top += 18;
+      var my_value = $.trim(word);
+      if (my_value in type_info) {
+        var annotation = my_value + " :: " + type_info[0] + " = " + type_info[1];
+        $("#typeannotations").css(my_position).show().html(annotation)
+      }
+    }).mouseleave(function(){
+      $("#typeannotations").hide();
+    });
+
+    return $elem;
+    //return "<span class='keyword'>" + word + "</span>";
   }
 
   var add_colors = function(element) {
@@ -62,18 +83,13 @@ $(function() {
     var keyword_dict = list_to_dict(keyword_list);
     var result_text = "";
 
+    element.html('');
+
     for (var i = 0; i < contents.length; i++) {
-      var word = $.trim(contents[i]);
+      var word = $.trim(contents[i]) + " ";
 
-      if (word in keyword_dict) {
-        result_text += surround_keyword(word);
-      } else {
-        result_text += word;
-      }
-      result_text += " ";
+      element.append(surround_keyword(word));
     }
-
-    element.html(result_text);
   }
 
   /* 
@@ -191,6 +207,20 @@ $(function() {
     }
   }
 
+  var do_type_annotations = function() {
+    send_to_server(":show bindings\n", function(data){
+      var lines = data.split("\n");
+      type_info = {};
+      for (var i = 0; i < lines.length; i++){
+        var line = lines[i];
+        var browse_info = /(.+) :: (.+) = (.+)/g;
+        var match = browse_info.exec(line);
+        if (match === null) continue;
+        type_info[match[1]] = [match[2], match[3]];
+      }
+    });
+  }
+
   var autocomplete = function() {
     var completed_word = $($("#autocomplete :first-child")[0]).text();
     var rest = completed_word.slice(current_word().length);
@@ -211,6 +241,7 @@ $(function() {
     if (value == ENTER) {
       add_output_line(old_html);
       showing_calltips = false;
+      do_type_annotations();
       return;
     } else if (value == BACKSPACE) {
       if (old_html.length == 0) {

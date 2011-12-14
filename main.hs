@@ -78,6 +78,8 @@ getHomeR = do
   <body>
     <ul id="autocomplete"> 
     </ul>
+    <div id="typeannotations">
+    </div>
     <div id="calltips">
     </div>
     <div id="console">
@@ -106,7 +108,7 @@ readUntilDone hout = do
     line <- hGetLine hout --remove "Prelude>" from first line.
     if sentinel `isInfixOf` line
       then return ""
-      else go (drop 8 line)
+      else go ((drop 8 line) ++ "\n")
   where
     go resultSoFar = do
       line <- hGetLine hout

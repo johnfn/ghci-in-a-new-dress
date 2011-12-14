@@ -28,4 +28,5 @@
 
 * Kind of worried about how it seems like giand is crashing my computer. Should look into this...
 * Multiline inputs
-* Remove &gt; and &lt; stuff. I REALLY need a way to figure out how to send plaintext!.
+* Error when you hit enter on an empty string.
+* 

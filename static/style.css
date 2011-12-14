@@ -21,3 +21,13 @@ ul#autocomplete {
   position: absolute;
   border: 1px solid gray;
 }
+
+#hoverover {
+  position: absolute;
+  border: 1px solid gray;
+}
+
+#typeannotations {
+  position: absolute;
+  border: 1px solid gray;
+}
