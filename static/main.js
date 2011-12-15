@@ -177,14 +177,17 @@ $(function() {
 
         content = tuple[2];
         $new_elem.children("#content").css({'color' : 'red'});
+        $new_elem.children("#prompt").replaceWith($("<img src='static/fail.png'></img>"));
+      } else {
+        $new_elem.children("#prompt").replaceWith($("<img src='static/okay.png'></img>"));
       }
+
 
       $new_elem.attr("class", "output");
       $new_elem.children("#content").html(content);
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
       $new_elem.insertBefore($("#console #active"));
-      $new_elem.children("#prompt").remove();
 
       do_type_annotations($new_elem.children("#content"));
     }
@@ -415,7 +418,7 @@ $(function() {
 
       var my_position = $("#cursor").offset();
       my_position.top += 18;
-      
+
       var annotation = result;
       var elem = $("#typeannotations").css(my_position).show().html(annotation);
 
