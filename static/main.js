@@ -287,6 +287,19 @@ $(function() {
     }
   }
 
+  function getSelText() {
+    var txt = '';
+    if (window.getSelection) {
+      txt = window.getSelection();
+    } else if (document.getSelection) {
+      txt = document.getSelection();
+    } else if (document.selection) {
+      txt = document.selection.createRange().text;
+    } else return;
+    return htmlDecode(txt);
+  }
+
+
   var fill_sidebar = function(bindings) {
     $("#sidelist").children().remove();
     for (var name in bindings) {
@@ -384,6 +397,35 @@ $(function() {
     show_calltips();
     blink_cursor();
   }, 100);
+
+  function clearSelection() {
+    if ( document.selection ) {
+        document.selection.empty();
+    } else if ( window.getSelection ) {
+        window.getSelection().removeAllRanges();
+    }
+  }
+
+  $(document).mouseup(function() {
+    var selection = getSelText();
+    send_to_server(":t " + selection, function(result) {
+      if (result.indexOf("ERR") != -1) return;
+      result = strip_libs(result);
+
+      var my_position = $("#cursor").offset();
+      my_position.top += 18;
+      
+      var annotation = result;
+      var elem = $("#typeannotations").css(my_position).show().html(annotation);
+
+      $(document).mousedown(function(){
+        $("#typeannotations").hide();
+        //TODO: Destroy this function
+      });
+
+    });
+    clearSelection();
+  });
 
   function initialize() {
     populate_autocomplete();
