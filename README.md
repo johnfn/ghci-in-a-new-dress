@@ -22,6 +22,7 @@ This should be a .cabal file.
 * Variable inspection **DONE**
 * Integrate the debugging information
 * Search by result value
+* Docs
 * Red squiggly error lines, and defer all the work to Haskell.
 
 * Call stack lol
