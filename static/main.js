@@ -138,7 +138,9 @@ $(function() {
         var tuple = eval(htmlDecode(content.slice(5)));
 
         content = tuple[2];
+        $new_elem.children("#content").css({'color' : 'red'});
       }
+
       $new_elem.children("#content").html(content);
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
