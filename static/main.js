@@ -10,12 +10,14 @@ $(function() {
   var showing_calltips = false;
   var calltips_word = "";
 
+  var keywords = ["as", "case,", "class", "data", "data", "default", "deriving", "deriving", "do", "forall", "foreign", "hiding", "if,", "import", "infix,", "instance", "let", "mdo", "module", "newtype", "proc", "qualified", "rec", "type", "type", "type", "where", "then", "else", "infixl", "infixr", "in" ];
+
   // Debugging utilities
   var log = function(){ console.log.apply(console, arguments)};
 
   var blink_cursor = function() {
     ++ticks;
-    if (ticks % 3 == 0) {
+    if (ticks % 3 === 0) {
       /* We don't want to set display: none since then we wouldn't be able to
        * position the autocomplete at the cursor when the cursor was not
        * visible. So we blink the cursor in this way instead. */
@@ -57,7 +59,7 @@ $(function() {
   }
 
   var uid = 0;
-  var colors = ["red", "blue", "green"];
+  var colors = ["#faa", "#afa", "#aaf", "#ffa", "#aff", "#faf", "#ddd"];
   var color_idx = 0;
   var color_dict = {};
 
@@ -79,23 +81,50 @@ $(function() {
 
     if (my_value in type_info){
       $elem.css('color', get_color(type_info[my_value][0]));
+
+      $elem.mousedown(function(){
+        var my_position = $elem.offset();
+        my_position.top += 18;
+        if (my_value in type_info) {
+          var vals = type_info[my_value];
+          var annotation = my_value + " :: " + vals[0] + " = " + vals[1];
+          var elem = $("#typeannotations").css(my_position).show().html(annotation);
+        }
+      }).mouseleave(function(){
+        $("#typeannotations").hide();
+      });
+
+    } else if (keywords.indexOf(word) != -1) {
+      return $elem;
+    } else {
+      var my_type = undefined;
+
+      if (my_value.match(/[0-9]+/)) {
+        my_type = "Integer";
+      } else if (my_value.match(/[0-9]+\.[0-9]+/)) {
+        my_type = "Double";
+      } else if (my_value.match(/'.*'/)) {
+        my_type = "Char";
+      } else if (my_value in autocomplete_info) {
+        my_type = autocomplete_info[my_value];
+      } else {
+        return $elem; //we can't figure out what type it is.
+      }
+
+      $elem.css('color', get_color(my_type));
+
+      $elem.mousedown(function(){
+        var my_position = $elem.offset();
+        my_position.top += 18;
+        var elem = $("#typeannotations").css(my_position).show().html(my_type);
+      }).mouseleave(function(){
+        $("#typeannotations").hide();
+      });
     }
 
-    $elem.mousedown(function(){
-      var my_position = $elem.offset();
-      my_position.top += 18;
-      if (my_value in type_info) {
-        var vals = type_info[my_value];
-        var annotation = my_value + " :: " + vals[0] + " = " + vals[1];
-        var elem = $("#typeannotations").css(my_position).show().html(annotation);
-      }
-    }).mouseleave(function(){
-      $("#typeannotations").hide();
-    });
-
     return $elem;
-    //return "<span class='keyword'>" + word + "</span>";
   }
+
 
   var add_colors = function(element) {
     var lines = element.html().split('\n');
@@ -137,6 +166,7 @@ $(function() {
       $old_elem.attr("id", ""); //remove #active id.
       $old_elem.children("#cursor").remove();
       $old_elem.css({'class': 'input'});
+      $old_elem.children("#prompt").html("$ ");
 
       $new_elem.children("#content").html("");
 
@@ -147,18 +177,22 @@ $(function() {
 
         content = tuple[2];
         $new_elem.children("#content").css({'color' : 'red'});
+        $new_elem.children("#prompt").replaceWith($("<img src='static/fail.png'></img>"));
       } else if(starts_with(content, "DOC")){
         // alert("DOC");
         var tuple = htmlDecode(content.slice(3));
         content = tuple;
         $new_elem.children("#content").css({'color' : 'green'});
+      } else {
+        $new_elem.children("#prompt").replaceWith($("<img src='static/okay.png'></img>"));
       }
 
+
+      $new_elem.attr("class", "output");
       $new_elem.children("#content").html(content);
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
       $new_elem.insertBefore($("#console #active"));
-      $new_elem.children("#prompt").remove();
 
       do_type_annotations($new_elem.children("#content"));
     }
@@ -200,10 +234,17 @@ $(function() {
     });
   }
 
+  var strip_libs = function(str) {
+    if (str.indexOf("ERR") != -1) {
+      return str;
+    }
+    return str.slice(str.indexOf("&gt;") + 4);
+  }
+
   var add_output_line = function(content) {
     send_to_server(content, function(data){
       add_line(content, true);
-      add_line(data, false);
+      add_line(strip_libs(data), false);
     });
   }
 
@@ -214,7 +255,7 @@ $(function() {
 
   var starts_with = function(bigger, smaller) {
     if (smaller.length > bigger) return false;
-    return bigger.slice(0, smaller.length) == smaller;
+    return bigger.slice(0, smaller.length) === smaller;
   }
 
   var current_word = function() {
@@ -240,7 +281,7 @@ $(function() {
       }
     }
 
-    if (current_word() == "") {
+    if (current_word() === "") {
       autocomplete_visible = false;
     }
 
@@ -255,10 +296,32 @@ $(function() {
     }
   }
 
+  function getSelText() {
+    var txt = '';
+    if (window.getSelection) {
+      txt = window.getSelection();
+    } else if (document.getSelection) {
+      txt = document.getSelection();
+    } else if (document.selection) {
+      txt = document.selection.createRange().text;
+    } else return;
+    return htmlDecode(txt);
+  }
+
+
+  var fill_sidebar = function(bindings) {
+    $("#sidelist").children().remove();
+    for (var name in bindings) {
+      var info = name + " :: " + bindings[name][0] + " = " + bindings[name][1];
+      $("#sidelist").append($("<li>" + info + "</li>"))
+    }
+  }
+
   var do_type_annotations = function(elem) {
     send_to_server(":show bindings\n", function(data){
       var lines = data.split("\n");
       type_info = {};
+      lines[0] = strip_libs(lines[0]);
       for (var i = 0; i < lines.length; i++){
         var line = lines[i];
         var browse_info = /(.+) :: (.+) = (.+)/g;
@@ -268,6 +331,7 @@ $(function() {
       }
 
       add_colors(elem);
+      fill_sidebar(type_info);
     });
   }
 
@@ -288,17 +352,17 @@ $(function() {
     var old_html = $content.html();
     var new_html;
 
-    if (value == ENTER) {
+    if (value === ENTER) {
       add_output_line(old_html);
       showing_calltips = false;
       return;
-    } else if (value == BACKSPACE) {
+    } else if (value === BACKSPACE) {
       if (old_html.length == 0) {
         return;
       }
 
       new_html = old_html.slice(0, old_html.length - 1);
-    } else if (value == TAB) { 
+    } else if (value === TAB) { 
       autocomplete();
     } else {
       new_html = old_html + value;
@@ -308,17 +372,15 @@ $(function() {
     move_autocomplete();
   }
 
-
-
   /* Backspace cannot be detected by a keypress event. */
   $(document).bind('keydown', function(e) {
-    if (e.which == BACKSPACE) {
+    if (e.which === BACKSPACE) {
       add_to_console(BACKSPACE);
       e.preventDefault();
       return false;
-    } else if (e.which == ENTER) {
+    } else if (e.which === ENTER) {
       add_to_console(ENTER);
-    } else if (e.which == TAB) {
+    } else if (e.which === TAB) {
       e.preventDefault();
       autocomplete();
     }
@@ -344,6 +406,35 @@ $(function() {
     show_calltips();
     blink_cursor();
   }, 100);
+
+  function clearSelection() {
+    if ( document.selection ) {
+        document.selection.empty();
+    } else if ( window.getSelection ) {
+        window.getSelection().removeAllRanges();
+    }
+  }
+
+  $(document).mouseup(function() {
+    var selection = getSelText();
+    send_to_server(":t " + selection, function(result) {
+      if (result.indexOf("ERR") != -1) return;
+      result = strip_libs(result);
+
+      var my_position = $("#cursor").offset();
+      my_position.top += 18;
+
+      var annotation = result;
+      var elem = $("#typeannotations").css(my_position).show().html(annotation);
+
+      $(document).mousedown(function(){
+        $("#typeannotations").hide();
+        //TODO: Destroy this function
+      });
+
+    });
+    clearSelection();
+  });
 
   function initialize() {
     populate_autocomplete();

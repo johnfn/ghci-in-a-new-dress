@@ -66,6 +66,8 @@ mkYesod "HelloWorld" [parseRoutes|
 instance Yesod HelloWorld where
     approot _ = ""
 
+tempFileName :: String
+tempFileName = "commandsEntered.hs"
 
 isSpace :: Char -> Bool
 isSpace c = (c == ' ') || (c == '\n')
@@ -84,6 +86,7 @@ unescape string = go string ""
     go string result | "&gt;" `isPrefixOf` string = go (drop 4 string) (result ++ ">")
 
     go string result | otherwise = go (drop 1 string) (result ++ [head string])
+
 
 postGHCIR :: Handler RepHtml
 postGHCIR = do
@@ -115,14 +118,22 @@ getHomeR = do
     </div>
     <div id="calltips">
     </div>
-    <div id="console">
-      <div class="input" id="active">
-        <span id="prompt">
-          $
-        </span>
-        <span id="content">
-        </span>
-        <span id="cursor">_</span>
+    <div id="program">
+      <div id="console">
+        <div class="input" id="active">
+          <span id="prompt">
+            $
+          </span>
+          <span id="content">
+          </span>
+          <span id="cursor">_</span>
+        </div>
+        <div id="sidebar">
+          <h3>
+            Inspector
+          </h3>
+          <ul id="sidelist">
+          </ul>
       </div>
     </div>
   </body>
@@ -150,13 +161,59 @@ readUntilDone hout = do
         then return (resultSoFar)
         else go (resultSoFar ++ line ++ "\n")
 
+lineIsFunctionDefinition :: String -> Bool
+lineIsFunctionDefinition line = 
+  ("=" `isInfixOf` line) && (not (" " `isPrefixOf` line)) && (not ("data" `isPrefixOf` line))
+
+getFunctionName :: String -> String
+getFunctionName line =
+  (words line) !! 0
+
+stripLet :: String -> String
+stripLet str =
+  if "let" `isPrefixOf` str
+    then drop 4 str
+    else str
+
+-- Strip double definitions out of a Haskell file, retaining
+-- only the last one. 
+stripDoubleDefs :: String -> IO [String]
+stripDoubleDefs file = do
+    contents <- liftM lines $ readFile file
+    let result = go contents [""] [""]
+
+    return (result)
+  where
+    go :: [String] -> [String] -> [String] -> [String]
+    -- Build valid Haskell program, putting data first, and
+    -- all commands inside of a do block.
+    go [] result dataLines = dataLines ++ result
+
+    -- Gather all inputted lines.
+    go (line:lines) result dataLines =
+      if lineIsFunctionDefinition line
+        then
+          let name = getFunctionName line in
+            if (any (==line) (map getFunctionName lines))
+              then go lines result dataLines
+              else go lines (result ++ [stripLet $ line]) dataLines
+        else 
+          if "data" `isPrefixOf` line 
+            then go lines result (dataLines ++ [line])
+            else go lines (result) dataLines
+      
+
 -- Handles text typed in the REPL that does data constructor declarations (data Color = Black | White)
 handleDataInput input hin hout = do
-  writeFile "temp.hs" input
-  hPutStr hin ":load temp.hs\n"
+  stripped <- stripDoubleDefs tempFileName
+  removeFile tempFileName
+  writeFile tempFileName (unlines stripped)
+
+  hPutStr hin (":load " ++ tempFileName ++ "\n")
   hPutStr hin (":t " ++ sentinel ++ "\n")
   output <- readUntilDone hout
-  removeFile "temp.hs"
+
+  return ()
 
 getErrors herr = 
     go herr ""
@@ -167,7 +224,6 @@ getErrors herr =
       if "oopsthisisnotavariable" `isInfixOf` line
         then return(results)
         else go herr (results ++ "\n" ++ line)
-
 
 
 -- Take the interactive output and make it a little more JavaScript friendly.
@@ -211,6 +267,11 @@ queryGHCI input =
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
   herr <- readIORef hErrGHCI
+
+  if ":" `isPrefixOf` input
+    then return ()
+    else do
+      appendFile tempFileName input
 
   if "data " `isPrefixOf` input
     then handleDataInput input hin hout
@@ -266,8 +327,11 @@ queryHaddock keyword = do
 
 main :: IO ()
 main = do
-  {- TODO: I think that ghci sometimes uses stderr, so I guess we should go
-   - ahead and read from that one too. -}
+  fileExists <- doesFileExist tempFileName
+  if fileExists
+    then removeFile tempFileName
+    else return ()
+
   (Just hin, Just hout, Just herr, _) <- createProcess (proc "ghci" []) { std_out = CreatePipe, std_in = CreatePipe, std_err = CreatePipe }
 
   hSetBuffering hin NoBuffering

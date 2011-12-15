@@ -11,7 +11,7 @@ This should be a .cabal file.
 
 ## Features
 
-* Types of larger expressions.
+* Types of larger expressions. **DONE**
 * Autocomplete - **DONE**
 * Calltips - **DONE**
 * Syntax highlight - **DONE**
@@ -19,7 +19,7 @@ This should be a .cabal file.
 * Type annotations **DONE**
 * Data types via file import **DONE**
 * Hlint suggestions **DONE**
-* Variable inspector on the side that shows all active bindings
+* Variable inspector on the side that shows all active bindings **DONE**
 * Show all active modules on the side too
 * Integrate the debugging information
 * Search by result value
@@ -33,18 +33,16 @@ This should be a .cabal file.
 
 ## UI
 
-* Use nice checks and x's from Termkit
 * Select first item of autocomplete
-* Variable inspector
+* Autocomplete icons
 
 ## BUGZ
 
-* Number keys are considered commands like tab etc.
+* Data doesn't work 100%.
 * syntax highlighting does not go all the way back
-
 
 ## TODO
 
 * Multiline inputs
 * Error when you hit enter on an empty string.
-* Sometimes Prelude> appears, sometimes it doesn't.
+* Scroll to the bottom automatically.
