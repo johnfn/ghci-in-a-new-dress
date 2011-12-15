@@ -126,10 +126,14 @@ $(function() {
     var $old_elem = $("#active");
     var $new_elem = $old_elem.clone();
 
+    $new_elem.css({'class': ''});
+
     if (yours) {
       $("#console").append($new_elem);
       $old_elem.attr("id", ""); //remove #active id.
       $old_elem.children("#cursor").remove();
+      $old_elem.css({'class': 'input'});
+
       $new_elem.children("#content").html("");
 
       do_type_annotations($old_elem.children("#content"));
@@ -223,7 +227,7 @@ $(function() {
       if (starts_with(list[i], current_word())) {
         autocomplete_visible = true;
 
-        $("#autocomplete").append($("<li><b>" + list[i].slice(0, current_word().length) + "</b>" + list[i].slice(current_word().length, list[i].length) + "</li>"));
+        $("#autocomplete").append($("<li><span class='completed'>" + list[i].slice(0, current_word().length) + "</span>" + list[i].slice(current_word().length, list[i].length) + "</li>"));
       }
     }
 

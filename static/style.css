@@ -1,5 +1,7 @@
 body {
-  font-family: "courier new";
+  font-family: "Monospace", sans-serif;
+  background: #000;
+  color: #fff;
 }
 
 /* There could be many of these. */
@@ -9,17 +11,39 @@ body {
 
 ul#autocomplete {
   position: absolute;
-  border: 1px solid gray;
   margin-left: 0px;
   padding-left: 5px;
   width: 200px;
-  overflow: auto;
   list-style-type: none;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(40, 40, 40, .25);
+
+  -webkit-box-shadow: 0px -1px 1px rgba(128,128,128,1), 0px 1px 6px rgba(0,0,0,1), 3px 1px 6px rgba(0,0,0,1);
+  -webkit-border-radius: .25em;
+  background: #555 -webkit-gradient(linear, left top, left bottom, from(#555), to(#333));
+}
+
+.completed {
+  padding: 4px 0 3px;
+  color: rgba(207, 207, 207, .65);
 }
 
 #calltips {
   position: absolute;
-  border: 1px solid gray;
+  margin-left: 0px;
+  padding-left: 5px;
+  padding-right: 5px;
+  list-style-type: none;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(40, 40, 40, .25);
+
+  -webkit-box-shadow: 0px -1px 1px rgba(128,128,128,1), 0px 1px 6px rgba(0,0,0,1), 3px 1px 6px rgba(0,0,0,1);
+  -webkit-border-radius: .25em;
+  background: #555 -webkit-gradient(linear, left top, left bottom, from(#555), to(#333));
+}
+
+.input {
+  background: #111;
 }
 
 #hoverover {
