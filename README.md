@@ -34,16 +34,15 @@ This should be a .cabal file.
 
 * Use nice checks and x's from Termkit
 * Select first item of autocomplete
-* Variable inspector
 
 ## BUGZ
 
 * Number keys are considered commands like tab etc.
 * syntax highlighting does not go all the way back
 
-
 ## TODO
 
+* List of visible bindings.
 * Multiline inputs
 * Error when you hit enter on an empty string.
 * Sometimes Prelude> appears, sometimes it doesn't.
