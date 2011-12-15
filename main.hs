@@ -248,8 +248,7 @@ handleDataInput input hin hout herr = do
           mapM (hPutStr hin) (map (++"\n") (lines oldInput))
           hPutStr hin (":t " ++ sentinel ++ "\n")
           output <- readUntilDone hout
-
-          return "Error in data definition."
+          return errors
 
 getErrors :: Handle -> IO String
 getErrors herr = 
