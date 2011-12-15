@@ -18,6 +18,15 @@ import Control.Monad
 import Data.IORef
 import System.IO.Unsafe
 
+
+import Debug.Trace (trace)
+--import Text.HTML.TagSoup
+import Text.XmlHtml
+import Data.ByteString.Char8 (pack)
+import qualified Data.Text as T
+import Data.Maybe
+
+
 data HelloWorld = HelloWorld { helloWorldStatic :: Static }
 
 {- This is Bad, Dirty, Evil, Not Good, etc. Fix if time.  The
@@ -186,6 +195,7 @@ queryGHCI input =
   
   -- TODO: Prevent this from running 
   -- Handle Hoogle queries
+  if ":doc" `isPrefixOf` input then queryHaddock input else
   if ":hoogle" `isPrefixOf` input then queryHoogle input else do
   
   -- Lock this function. Only 1 person can query
@@ -195,6 +205,8 @@ queryGHCI input =
   hlint <- if ":" `isPrefixOf` input then (return "") else ((hlintCheck input) )
   let hlintSugg = if ":" `isPrefixOf` input then hlint else (hlint ++ "\n")
 
+  -- If "No suggestions", then don't send it in down and if it already ends with '\n', don't do anything
+  
   _ <- takeMVar lockGHCI
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
@@ -241,6 +253,17 @@ queryHoogle keyword = do
     liftIO $ print output
     return output
 
+
+queryHaddock :: String -> IO String
+queryHaddock keyword = do
+    -- TODO: Fix newline issue and handle Hoogle errors
+  let keywords = case (stripPrefix ":doc" keyword) of
+                      (Just x) -> takeWhile (\y -> not (y == '\n')) $ dropWhile (\y -> y == ' ') x
+                      Nothing -> "list"
+  liftIO $ print "Haddock"
+  doc_  <- getDocForFn keywords
+  return doc_
+
 main :: IO ()
 main = do
   {- TODO: I think that ghci sometimes uses stderr, so I guess we should go
@@ -261,3 +284,60 @@ main = do
   s <- staticDevel "static"
 
   warpDebug 3000 $ HelloWorld s
+
+
+--- haddockParser
+-- module HaddockParser Func (Func) where
+
+data Func = Func {
+    name :: String,
+    type_ :: String,
+    doc  :: String
+} deriving (Show)
+
+-- findDefEls =
+
+parseTree n =
+    let
+        nodeTag = tagName n
+        cls = getAttribute (T.pack "class") n
+    in
+        if not ((isNothing nodeTag) || (isNothing cls) || (not ((fromJust cls) == (T.pack "top"))))
+            then ([n] ++ concat (map parseTree $ childNodes n))
+            else
+                concat (map parseTree $ childNodes n)
+
+convertNodeToMarkup n | isElement n = let tagName_ = T.unpack $ fromJust $ tagName n
+                                          -- attrs = map (\x -> ((T.unpack $ fst x) ++ "=" ++ (T.unpack $ snd x))) (elementAttrs n)
+                                          -- attrs
+                                       in
+                                        "<" ++ tagName_ ++ " " ++ ">"  ++ (concat $ map convertNodeToMarkup $ childNodes n) ++ "</" ++ tagName_ ++ ">"
+                      | isTextNode n = T.unpack $ nodeText n
+
+parseHaddock :: String -> [Func]
+parseHaddock doc =
+    let eitherDoc = (parseHTML "html" $ pack doc)
+        parseEl e = (Func (extractName e) (extractType e) (extractDoc  e))
+        extractName e = T.unpack $ nodeText $ head $ childElements $ head $ childElements e
+        extractType e = concat $ map T.unpack $ map nodeText $ init $ drop 1 $ childNodes $ head $ childElements e
+        extractDoc  e = convertNodeToMarkup $ (!!) (childElements e) 1
+    in
+        case eitherDoc of 
+            (Right doc_) -> map parseEl $ parseTree (head (docContent doc_))
+            (Left err) -> []
+
+test = do
+        html <- readFile "test.html"
+        return (parseHaddock html)
+
+getDocForFn name_ = do
+  html <- readFile "test.html"
+  liftIO $ print name_
+  let fns = parseHaddock html
+      fnDoc = (filter (\x -> ((name x) == name_)) fns)
+  return (if (length fnDoc > 0) then "DOC" ++ (doc $ head fnDoc) else "DOC<div class=\"error\">Nothing was found</div>")
+
+--main = do
+--    str <- test
+--    -- putStrLn str
+--    return ()

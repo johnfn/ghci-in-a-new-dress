@@ -147,6 +147,11 @@ $(function() {
 
         content = tuple[2];
         $new_elem.children("#content").css({'color' : 'red'});
+      } else if(starts_with(content, "DOC")){
+        // alert("DOC");
+        var tuple = htmlDecode(content.slice(3));
+        content = tuple;
+        $new_elem.children("#content").css({'color' : 'green'});
       }
 
       $new_elem.children("#content").html(content);

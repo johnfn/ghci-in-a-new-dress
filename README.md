@@ -29,6 +29,7 @@ This should be a .cabal file.
 * Docs
 * Red squiggly error lines, and defer all the work to Haskell.
 * Call stack lol
+* Filter out empty string
 
 ## UI
 
