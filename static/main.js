@@ -10,6 +10,8 @@ $(function() {
   var showing_calltips = false;
   var calltips_word = "";
 
+  var keywords = ["as", "case,", "class", "data", "data", "default", "deriving", "deriving", "do", "forall", "foreign", "hiding", "if,", "import", "infix,", "instance", "let", "mdo", "module", "newtype", "proc", "qualified", "rec", "type", "type", "type", "where", "then", "else", "infixl", "infixr", "in" ];
+
   // Debugging utilities
   var log = function(){ console.log.apply(console, arguments)};
 
@@ -57,7 +59,7 @@ $(function() {
   }
 
   var uid = 0;
-  var colors = ["red", "blue", "green"];
+  var colors = ["#faa", "#afa", "#aaf", "#ffa", "#aff", "#faf", "#ddd"];
   var color_idx = 0;
   var color_dict = {};
 
@@ -79,23 +81,50 @@ $(function() {
 
     if (my_value in type_info){
       $elem.css('color', get_color(type_info[my_value][0]));
+
+      $elem.mousedown(function(){
+        var my_position = $elem.offset();
+        my_position.top += 18;
+        if (my_value in type_info) {
+          var vals = type_info[my_value];
+          var annotation = my_value + " :: " + vals[0] + " = " + vals[1];
+          var elem = $("#typeannotations").css(my_position).show().html(annotation);
+        }
+      }).mouseleave(function(){
+        $("#typeannotations").hide();
+      });
+
+    } else if (keywords.indexOf(word) != -1) {
+      return $elem;
+    } else {
+      var my_type = undefined;
+
+      if (my_value.match(/[0-9]+/)) {
+        my_type = "Integer";
+      } else if (my_value.match(/[0-9]+\.[0-9]+/)) {
+        my_type = "Double";
+      } else if (my_value.match(/'.*'/)) {
+        my_type = "Char";
+      } else if (my_value in autocomplete_info) {
+        my_type = autocomplete_info[my_value];
+      } else {
+        return $elem; //we can't figure out what type it is.
+      }
+
+      $elem.css('color', get_color(my_type));
+
+      $elem.mousedown(function(){
+        var my_position = $elem.offset();
+        my_position.top += 18;
+        var elem = $("#typeannotations").css(my_position).show().html(my_type);
+      }).mouseleave(function(){
+        $("#typeannotations").hide();
+      });
     }
 
-    $elem.mousedown(function(){
-      var my_position = $elem.offset();
-      my_position.top += 18;
-      if (my_value in type_info) {
-        var vals = type_info[my_value];
-        var annotation = my_value + " :: " + vals[0] + " = " + vals[1];
-        var elem = $("#typeannotations").css(my_position).show().html(annotation);
-      }
-    }).mouseleave(function(){
-      $("#typeannotations").hide();
-    });
-
     return $elem;
-    //return "<span class='keyword'>" + word + "</span>";
   }
+
 
   var add_colors = function(element) {
     var lines = element.html().split('\n');
