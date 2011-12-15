@@ -178,6 +178,7 @@ $(function() {
         $new_elem.children("#content").css({'color' : 'red'});
       }
 
+      $new_elem.attr("class", "output");
       $new_elem.children("#content").html(content);
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
@@ -224,10 +225,17 @@ $(function() {
     });
   }
 
+  var strip_libs = function(str) {
+    if (str.indexOf("ERR") != -1) {
+      return str;
+    }
+    return str.slice(str.indexOf("&gt;") + 4);
+  }
+
   var add_output_line = function(content) {
     send_to_server(content, function(data){
       add_line(content, true);
-      add_line(data, false);
+      add_line(strip_libs(data), false);
     });
   }
 
