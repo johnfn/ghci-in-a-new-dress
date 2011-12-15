@@ -69,6 +69,9 @@ instance Yesod HelloWorld where
 tempFileName :: String
 tempFileName = "commandsEntered.hs"
 
+tempDataDefs :: String
+tempDataDefs = "dataDefs.hs"
+
 isSpace :: Char -> Bool
 isSpace c = (c == ' ') || (c == '\n')
 
@@ -204,17 +207,51 @@ stripDoubleDefs file = do
       
 
 -- Handles text typed in the REPL that does data constructor declarations (data Color = Black | White)
-handleDataInput input hin hout = do
-  stripped <- stripDoubleDefs tempFileName
-  removeFile tempFileName
-  writeFile tempFileName (unlines stripped)
+handleDataInput input hin hout herr = do
+  appendFile tempDataDefs ""
+  appendFile tempFileName ""
 
-  hPutStr hin (":load " ++ tempFileName ++ "\n")
+  oldDataDefs <- readFile tempDataDefs
+  oldInput <- readFile tempFileName
+
+  liftIO $ print oldDataDefs
+  liftIO $ print oldInput
+
+  liftIO $ print "appending"
+  liftIO $ print input
+
+  appendFile tempDataDefs input
+
+  hPutStr hin (":load " ++ tempDataDefs ++ "\n")
+  mapM (hPutStr hin) (map (++"\n") (lines oldInput))
+
   hPutStr hin (":t " ++ sentinel ++ "\n")
+  hPutStr hin "oopsthisisnotavariable\n"
+
   output <- readUntilDone hout
+  errLine <- hGetLine herr
 
-  return ()
+  if "oopsthisisnotavariable" `isInfixOf` errLine
+    then return ""
+    else do
+      liftIO $ print errLine
+      -- Error with that data definition. Forget about it.
+      errors <- getErrors herr
+      liftIO $ print "ERrors received:"
+      liftIO $ print errors
+      if (trimWhitespace errors) == ""
+        then return ""
+        else do
+          writeFile tempDataDefs oldDataDefs
+          --load from known good file
+          hPutStr hin (":load " ++ tempDataDefs ++ "\n")
+          mapM (hPutStr hin) (map (++"\n") (lines oldInput))
+          hPutStr hin (":t " ++ sentinel ++ "\n")
+          output <- readUntilDone hout
 
+          return errors
+
+getErrors :: Handle -> IO String
 getErrors herr = 
     go herr ""
   where
@@ -268,22 +305,27 @@ queryGHCI input =
   hout <- readIORef hOutGHCI
   herr <- readIORef hErrGHCI
 
-  if ":" `isPrefixOf` input
-    then return ()
-    else do
-      appendFile tempFileName input
+  errors <- if "data " `isPrefixOf` input
+              then do
+                err <- handleDataInput input hin hout herr
+                liftIO $ print "DONE"
+                return err
+              else do
+                hPutStr hin input
+                if ":" `isPrefixOf` input
+                  then return ""
+                  else do
+                    hPutStr hin "oopsthisisnotavariable\n"
+                    appendFile tempFileName input
+                    err <- getErrors herr
+                    return err
 
-  if "data " `isPrefixOf` input
-    then handleDataInput input hin hout
-    else hPutStr hin input
   
   -- This is a hack that lets us discover where the end of the output is.
   -- We will keep reading until we see the sentinel.
-  hPutStr hin "oopsthisisnotavariable\n"
   hPutStr hin (":t " ++ sentinel ++ "\n")
 
   output <- readUntilDone hout
-  errors <- getErrors herr
   putMVar lockGHCI True
 
   if trimWhitespace(errors) == "" 
@@ -331,6 +373,11 @@ main = do
   fileExists <- doesFileExist tempFileName
   if fileExists
     then removeFile tempFileName
+    else return ()
+   
+  fileExists <- doesFileExist tempDataDefs
+  if fileExists
+    then removeFile tempDataDefs
     else return ()
 
   (Just hin, Just hout, Just herr, _) <- createProcess (proc "ghci" []) { std_out = CreatePipe, std_in = CreatePipe, std_err = CreatePipe }
