@@ -166,6 +166,7 @@ $(function() {
       $old_elem.attr("id", ""); //remove #active id.
       $old_elem.children("#cursor").remove();
       $old_elem.css({'class': 'input'});
+      $old_elem.children("#prompt").html("$ ");
 
       $new_elem.children("#content").html("");
 
