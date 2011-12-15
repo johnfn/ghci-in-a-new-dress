@@ -121,8 +121,6 @@ getHomeR = do
             Inspector
           </h3>
           <ul id="sidelist">
-            <li> Example </li>
-            <li> Ex. 2 </li>
           </ul>
       </div>
     </div>
