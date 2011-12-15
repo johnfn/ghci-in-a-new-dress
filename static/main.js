@@ -98,17 +98,21 @@ $(function() {
   }
 
   var add_colors = function(element) {
-    var contents = element.html().split(' ');
-    var keyword_list = [ 'if', 'then', 'else' ];
-    var keyword_dict = list_to_dict(keyword_list);
-    var result_text = "";
+    var lines = element.html().split('\n');
 
     element.html('');
 
-    for (var i = 0; i < contents.length; i++) {
-      var word = $.trim(contents[i]) + " ";
+    for (var i = 0; i < lines.length; i++) {
+      var words = lines[i].split(' ');
 
-      element.append(surround_word(word));
+      for (var j = 0; j < words.length; j++) {
+        var word = $.trim(words[j]) + " ";
+
+        element.append(surround_word(word));
+      }
+      if (i != lines.length - 1) {
+        element.append($("<br></br>"));
+      }
     }
   }
 
