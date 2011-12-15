@@ -48,6 +48,12 @@ ul#autocomplete {
   background: #111;
 }
 
+.output {
+  padding-left: 20px;
+  border-left: 20px;
+  border-left: 1px solid white;
+}
+
 #hoverover {
   position: absolute;
   border: 1px solid gray;
