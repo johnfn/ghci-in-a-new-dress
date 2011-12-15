@@ -288,6 +288,8 @@ $(function() {
   $(document).bind('keydown', function(e) {
     if (e.which == BACKSPACE) {
       add_to_console(BACKSPACE);
+      e.preventDefault();
+      return false;
     } else if (e.which == ENTER) {
       add_to_console(ENTER);
     } else if (e.which == TAB) {

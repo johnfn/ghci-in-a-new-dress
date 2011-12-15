@@ -131,21 +131,26 @@ readUntilDone hout = do
         then return (resultSoFar)
         else go (resultSoFar ++ line ++ "\n")
 
+-- Handles text typed in the REPL that does data constructor declarations (data Color = Black | White)
 handleDataInput input hin hout = do
   writeFile "temp.hs" input
   hPutStr hin ":load temp.hs\n"
   hPutStr hin (":t " ++ sentinel ++ "\n")
   output <- readUntilDone hout
-
   removeFile "temp.hs"
 
 queryGHCI :: String -> IO String
-queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n"
-queryGHCI input = do
+queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n" -- Append a newline character to the end of input
+queryGHCI input = 
+  
+  -- TODO: Prevent this from running 
+  -- Handle Hoogle queries
+  if ":hoogle" `isPrefixOf` input then queryHoogle input else do
+  
   -- Lock this function. Only 1 person can query
   -- ghci at a time.
+  hlint <- hlintCheck input
   _ <- takeMVar lockGHCI
-
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
 
@@ -158,9 +163,29 @@ queryGHCI input = do
   hPutStr hin (":t " ++ sentinel ++ "\n")
 
   output <- readUntilDone hout
-
   putMVar lockGHCI True
-  return output
+  return (hlint ++ "\n" ++ output)
+
+hlintCheck :: String -> IO String
+hlintCheck code = do
+    -- `code` already ends with a newline character
+    writeFile "/tmp/temp.hs" ( "main = do" ++ "\n\t" ++ code ++ "\t" ++ "return ()" )
+    ( Just hin, Just hout, _ , _ ) <- createProcess (proc "hlint" ["/tmp/temp.hs"]) { std_out = CreatePipe, std_in = CreatePipe }
+    output <- hGetContents hout
+    return output
+
+queryHoogle :: String -> IO String
+queryHoogle keyword = do
+	-- TODO: Fix newline issue and handle Hoogle errors
+    let keywords = case (stripPrefix ":hoogle" keyword) of
+    					(Just x) -> dropWhile (\y -> y == ' ') x
+    					Nothing -> "list"
+    liftIO $ print "Hoogle"
+    liftIO $ print keyword
+    (Just hin, Just hout, _, _) <- createProcess (proc "hoogle" ["--count=20", keywords]) { std_out = CreatePipe, std_in = CreatePipe }
+    output <- hGetContents hout
+    liftIO $ print output
+    return output
 
 main :: IO ()
 main = do
