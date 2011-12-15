@@ -112,6 +112,12 @@ $(function() {
     }
   }
 
+  function htmlDecode(input){
+    var e = document.createElement('div');
+    e.innerHTML = input;
+    return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+  }
+
   /* 
    * Generic way to add a new line to the console. `yours` indicates whether it
    * "belongs to you" - i.e., whether the cursor should be on it or not. 
@@ -128,6 +134,11 @@ $(function() {
 
       do_type_annotations($old_elem.children("#content"));
     } else {
+      if (starts_with(content, "ERR: ")) {
+        var tuple = eval(htmlDecode(content.slice(5)));
+
+        content = tuple[2];
+      }
       $new_elem.children("#content").html(content);
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
@@ -142,7 +153,7 @@ $(function() {
    * when we receive data from the request. */
   var send_to_server = function(content, callback) {
     var strip_and_callback = function(content) {
-      var initial_crap = "<!DOCTYPE html>\n <html><head><title></title></head><body>";
+      var initial_crap = "<!DOCTYPE html>\n<html><head><title></title></head><body>";
       var final_crap   = "</body></html>";
 
       var stripped_content = content.slice(initial_crap.length, content.length - final_crap.length);

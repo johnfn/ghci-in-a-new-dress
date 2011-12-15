@@ -38,6 +38,10 @@ hOutGHCI :: IORef Handle
 {-# NOINLINE hOutGHCI #-}
 hOutGHCI = unsafePerformIO (newIORef undefined)
 
+hErrGHCI :: IORef Handle
+{-# NOINLINE hErrGHCI #-}
+hErrGHCI = unsafePerformIO (newIORef undefined)
+
 lockGHCI :: MVar Bool
 {-# NOINLINE lockGHCI #-}
 lockGHCI = unsafePerformIO (newMVar True)
@@ -52,6 +56,14 @@ mkYesod "HelloWorld" [parseRoutes|
 
 instance Yesod HelloWorld where
     approot _ = ""
+
+
+isSpace :: Char -> Bool
+isSpace c = (c == ' ') || (c == '\n')
+
+trimWhitespace :: String -> String
+trimWhitespace = f . f
+   where f = reverse . dropWhile isSpace
 
 unescape :: String -> String
 unescape string = go string ""
@@ -71,16 +83,14 @@ postGHCIR = do
 
   (postTuples, _) <- runRequestBody
   let content = unescape $ T.unpack (snd $ postTuples !! 0)
-  
-  liftIO $ print content
 
   result <- liftIO $ queryGHCI content
+
   defaultLayout [whamlet|#{result}|]
 
 getHomeR :: Handler RepHtml
 getHomeR = do
   result <- liftIO $ queryGHCI ":t 5.0\n"
-  liftIO $ print result
   defaultLayout [whamlet|
 <html>
   <head>
@@ -119,7 +129,7 @@ sentinel :: String
 sentinel = "1234567890"
 
 readUntilDone hout = do
-    line <- hGetLine hout --remove "Prelude>" from first line.
+    line <- hGetLine hout 
     if sentinel `isInfixOf` line
       then return "\n"
       else go (line ++ "\n")
@@ -139,6 +149,37 @@ handleDataInput input hin hout = do
   output <- readUntilDone hout
   removeFile "temp.hs"
 
+getErrors herr = 
+    go herr ""
+  where
+    go herr results = do
+      line <- hGetLine herr
+
+      if "oopsthisisnotavariable" `isInfixOf` line
+        then return(results)
+        else go herr (results ++ "\n" ++ line)
+
+
+
+-- Take the interactive output and make it a little more JavaScript friendly.
+-- Return a tuple of (position, position, details)
+parseErrors :: String -> [String]
+parseErrors str =
+    go str "" "" 0
+  where
+    -- <interactive>:1:1:
+    go :: String -> String -> String -> Int -> [String]
+    go rest first second 3 = [first, second, rest]
+
+    go (s:str) first second seen =
+      if s == ':'
+        then go str first second (seen + 1)
+        else
+          case seen of
+            1 -> go str (first ++ [s]) second seen
+            2 -> go str first (second ++ [s]) seen
+            _ -> go str first second seen
+
 queryGHCI :: String -> IO String
 queryGHCI input | last input /= '\n' = queryGHCI $ input ++ "\n" -- Append a newline character to the end of input
 queryGHCI input = 
@@ -149,10 +190,15 @@ queryGHCI input =
   
   -- Lock this function. Only 1 person can query
   -- ghci at a time.
-  hlint <- hlintCheck input
+  
+  -- Get Hlint suggests only if it's Haskell code and not an interpretor command
+  hlint <- if ":" `isPrefixOf` input then (return "") else ((hlintCheck input) )
+  let hlintSugg = if ":" `isPrefixOf` input then hlint else (hlint ++ "\n")
+
   _ <- takeMVar lockGHCI
   hin <- readIORef hInGHCI
   hout <- readIORef hOutGHCI
+  herr <- readIORef hErrGHCI
 
   if "data " `isPrefixOf` input
     then handleDataInput input hin hout
@@ -160,11 +206,19 @@ queryGHCI input =
   
   -- This is a hack that lets us discover where the end of the output is.
   -- We will keep reading until we see the sentinel.
+  hPutStr hin "oopsthisisnotavariable\n"
   hPutStr hin (":t " ++ sentinel ++ "\n")
 
   output <- readUntilDone hout
+  errors <- getErrors herr
   putMVar lockGHCI True
-  return (hlint ++ "\n" ++ output)
+
+  if trimWhitespace(errors) == "" 
+    then return (hlintSugg ++ output)
+    else return ("ERR: " ++ (show $ parseErrors $ errors))
+
+
+-- External helpers
 
 hlintCheck :: String -> IO String
 hlintCheck code = do
@@ -176,10 +230,10 @@ hlintCheck code = do
 
 queryHoogle :: String -> IO String
 queryHoogle keyword = do
-	-- TODO: Fix newline issue and handle Hoogle errors
+    -- TODO: Fix newline issue and handle Hoogle errors
     let keywords = case (stripPrefix ":hoogle" keyword) of
-    					(Just x) -> dropWhile (\y -> y == ' ') x
-    					Nothing -> "list"
+                        (Just x) -> dropWhile (\y -> y == ' ') x
+                        Nothing -> "list"
     liftIO $ print "Hoogle"
     liftIO $ print keyword
     (Just hin, Just hout, _, _) <- createProcess (proc "hoogle" ["--count=20", keywords]) { std_out = CreatePipe, std_in = CreatePipe }
@@ -191,16 +245,18 @@ main :: IO ()
 main = do
   {- TODO: I think that ghci sometimes uses stderr, so I guess we should go
    - ahead and read from that one too. -}
-  (Just hin, Just hout, _, _) <- createProcess (proc "ghci" []) { std_out = CreatePipe, std_in = CreatePipe }
+  (Just hin, Just hout, Just herr, _) <- createProcess (proc "ghci" []) { std_out = CreatePipe, std_in = CreatePipe, std_err = CreatePipe }
 
   hSetBuffering hin NoBuffering
   hSetBuffering hout NoBuffering
+  hSetBuffering herr NoBuffering
 
   hPutStr hin ":t 1\n"
   readIntro hout
 
   writeIORef hInGHCI hin
   writeIORef hOutGHCI hout
+  writeIORef hErrGHCI herr
 
   s <- staticDevel "static"
 

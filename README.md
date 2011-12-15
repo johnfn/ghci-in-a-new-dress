@@ -17,13 +17,15 @@ This should be a .cabal file.
 * (Potentially) advanced syntax highlighting (type colors) **DONE**
 * Type annotations **DONE**
 * Data types via file import **DONE**
-* Remove let ... in syntax
-* Strictness of functions
-* Hlint suggestions
-* Variable inspection **DONE**
+* Hlint suggestions **DONE**
+* Variable inspector on the side that shows all active bindings
+* Show all active modules on the side too
 * Integrate the debugging information
 * Search by result value
-* Hoogle integration
+* Remove let ... in syntax
+* Strictness of functions
+* Hoogle integration **DONE**
+* Red squiggly error lines, and defer all the work to Haskell.
 
 * Call stack lol
 
