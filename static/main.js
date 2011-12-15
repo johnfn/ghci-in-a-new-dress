@@ -247,6 +247,10 @@ $(function() {
     send_to_server(content, function(data){
       add_line(content, true);
       add_line(strip_libs(data), false);
+      window.scrollTo(0, document.body.scrollHeight);
+      setTimeout(function(){
+        window.scrollTo(0, document.body.scrollHeight);
+      }, 300);
     });
   }
 
