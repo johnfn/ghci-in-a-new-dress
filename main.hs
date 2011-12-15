@@ -323,6 +323,7 @@ queryHaddock keyword = do
                       Nothing -> "list"
   liftIO $ print "Haddock"
   doc_  <- getDocForFn keywords
+  liftIO $ print doc_
   return doc_
 
 main :: IO ()

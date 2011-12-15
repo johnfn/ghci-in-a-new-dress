@@ -179,7 +179,6 @@ $(function() {
         $new_elem.children("#content").css({'color' : 'red'});
         $new_elem.children("#prompt").replaceWith($("<img src='static/fail.png'></img>"));
       } else if(starts_with(content, "DOC")){
-        // alert("DOC");
         var tuple = htmlDecode(content.slice(3));
         content = tuple;
         $new_elem.children("#content").css({'color' : 'green'});
@@ -236,6 +235,9 @@ $(function() {
 
   var strip_libs = function(str) {
     if (str.indexOf("ERR") != -1) {
+      return str;
+    }
+    if (str.indexOf("DOC") != -1) {
       return str;
     }
     return str.slice(str.indexOf("&gt;") + 4);
