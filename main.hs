@@ -249,7 +249,7 @@ handleDataInput input hin hout herr = do
           hPutStr hin (":t " ++ sentinel ++ "\n")
           output <- readUntilDone hout
 
-          return errors
+          return "Error in data definition."
 
 getErrors :: Handle -> IO String
 getErrors herr = 
