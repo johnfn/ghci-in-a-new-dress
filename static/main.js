@@ -17,7 +17,7 @@ $(function() {
 
   var blink_cursor = function() {
     ++ticks;
-    if (ticks % 3 == 0) {
+    if (ticks % 3 === 0) {
       /* We don't want to set display: none since then we wouldn't be able to
        * position the autocomplete at the cursor when the cursor was not
        * visible. So we blink the cursor in this way instead. */
@@ -250,7 +250,7 @@ $(function() {
 
   var starts_with = function(bigger, smaller) {
     if (smaller.length > bigger) return false;
-    return bigger.slice(0, smaller.length) == smaller;
+    return bigger.slice(0, smaller.length) === smaller;
   }
 
   var current_word = function() {
@@ -276,7 +276,7 @@ $(function() {
       }
     }
 
-    if (current_word() == "") {
+    if (current_word() === "") {
       autocomplete_visible = false;
     }
 
@@ -347,17 +347,17 @@ $(function() {
     var old_html = $content.html();
     var new_html;
 
-    if (value == ENTER) {
+    if (value === ENTER) {
       add_output_line(old_html);
       showing_calltips = false;
       return;
-    } else if (value == BACKSPACE) {
+    } else if (value === BACKSPACE) {
       if (old_html.length == 0) {
         return;
       }
 
       new_html = old_html.slice(0, old_html.length - 1);
-    } else if (value == TAB) { 
+    } else if (value === TAB) { 
       autocomplete();
     } else {
       new_html = old_html + value;
@@ -369,13 +369,13 @@ $(function() {
 
   /* Backspace cannot be detected by a keypress event. */
   $(document).bind('keydown', function(e) {
-    if (e.which == BACKSPACE) {
+    if (e.which === BACKSPACE) {
       add_to_console(BACKSPACE);
       e.preventDefault();
       return false;
-    } else if (e.which == ENTER) {
+    } else if (e.which === ENTER) {
       add_to_console(ENTER);
-    } else if (e.which == TAB) {
+    } else if (e.which === TAB) {
       e.preventDefault();
       autocomplete();
     }
