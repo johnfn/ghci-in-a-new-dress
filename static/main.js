@@ -287,10 +287,19 @@ $(function() {
     }
   }
 
+  var fill_sidebar = function(bindings) {
+    $("#sidelist").children().remove();
+    for (var name in bindings) {
+      var info = name + " :: " + bindings[name][0] + " = " + bindings[name][1];
+      $("#sidelist").append($("<li>" + info + "</li>"))
+    }
+  }
+
   var do_type_annotations = function(elem) {
     send_to_server(":show bindings\n", function(data){
       var lines = data.split("\n");
       type_info = {};
+      lines[0] = strip_libs(lines[0]);
       for (var i = 0; i < lines.length; i++){
         var line = lines[i];
         var browse_info = /(.+) :: (.+) = (.+)/g;
@@ -300,6 +309,7 @@ $(function() {
       }
 
       add_colors(elem);
+      fill_sidebar(type_info);
     });
   }
 
@@ -339,8 +349,6 @@ $(function() {
     $content.html(new_html);
     move_autocomplete();
   }
-
-
 
   /* Backspace cannot be detected by a keypress event. */
   $(document).bind('keydown', function(e) {

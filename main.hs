@@ -106,14 +106,24 @@ getHomeR = do
     </div>
     <div id="calltips">
     </div>
-    <div id="console">
-      <div class="input" id="active">
-        <span id="prompt">
-          $
-        </span>
-        <span id="content">
-        </span>
-        <span id="cursor">_</span>
+    <div id="program">
+      <div id="console">
+        <div class="input" id="active">
+          <span id="prompt">
+            $
+          </span>
+          <span id="content">
+          </span>
+          <span id="cursor">_</span>
+        </div>
+        <div id="sidebar">
+          <h3>
+            Inspector
+          </h3>
+          <ul id="sidelist">
+            <li> Example </li>
+            <li> Ex. 2 </li>
+          </ul>
       </div>
     </div>
   </body>
