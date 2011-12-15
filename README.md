@@ -11,6 +11,7 @@ This should be a .cabal file.
 
 ## Features
 
+* Types of larger expressions.
 * Autocomplete - **DONE**
 * Calltips - **DONE**
 * Syntax highlight - **DONE**
@@ -25,9 +26,21 @@ This should be a .cabal file.
 * Remove let ... in syntax
 * Strictness of functions
 * Hoogle integration **DONE**
+* Docs
 * Red squiggly error lines, and defer all the work to Haskell.
-
 * Call stack lol
+
+## UI
+
+* Use nice checks and x's from Termkit
+* Select first item of autocomplete
+* Variable inspector
+
+## BUGZ
+
+* Number keys are considered commands like tab etc.
+* syntax highlighting does not go all the way back
+
 
 ## TODO
 

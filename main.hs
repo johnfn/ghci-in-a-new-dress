@@ -107,7 +107,7 @@ getHomeR = do
     <div id="calltips">
     </div>
     <div id="console">
-      <div id="active">
+      <div class="input" id="active">
         <span id="prompt">
           $
         </span>

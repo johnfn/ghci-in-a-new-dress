@@ -98,17 +98,21 @@ $(function() {
   }
 
   var add_colors = function(element) {
-    var contents = element.html().split(' ');
-    var keyword_list = [ 'if', 'then', 'else' ];
-    var keyword_dict = list_to_dict(keyword_list);
-    var result_text = "";
+    var lines = element.html().split('\n');
 
     element.html('');
 
-    for (var i = 0; i < contents.length; i++) {
-      var word = $.trim(contents[i]) + " ";
+    for (var i = 0; i < lines.length; i++) {
+      var words = lines[i].split(' ');
 
-      element.append(surround_word(word));
+      for (var j = 0; j < words.length; j++) {
+        var word = $.trim(words[j]) + " ";
+
+        element.append(surround_word(word));
+      }
+      if (i != lines.length - 1) {
+        element.append($("<br></br>"));
+      }
     }
   }
 
@@ -126,10 +130,14 @@ $(function() {
     var $old_elem = $("#active");
     var $new_elem = $old_elem.clone();
 
+    $new_elem.css({'class': ''});
+
     if (yours) {
       $("#console").append($new_elem);
       $old_elem.attr("id", ""); //remove #active id.
       $old_elem.children("#cursor").remove();
+      $old_elem.css({'class': 'input'});
+
       $new_elem.children("#content").html("");
 
       do_type_annotations($old_elem.children("#content"));
@@ -138,7 +146,9 @@ $(function() {
         var tuple = eval(htmlDecode(content.slice(5)));
 
         content = tuple[2];
+        $new_elem.children("#content").css({'color' : 'red'});
       }
+
       $new_elem.children("#content").html(content);
       $new_elem.attr("id", ""); //remove #active id.
       $new_elem.children("#cursor").remove();
@@ -221,7 +231,7 @@ $(function() {
       if (starts_with(list[i], current_word())) {
         autocomplete_visible = true;
 
-        $("#autocomplete").append($("<li><b>" + list[i].slice(0, current_word().length) + "</b>" + list[i].slice(current_word().length, list[i].length) + "</li>"));
+        $("#autocomplete").append($("<li><span class='completed'>" + list[i].slice(0, current_word().length) + "</span>" + list[i].slice(current_word().length, list[i].length) + "</li>"));
       }
     }
 
