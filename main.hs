@@ -251,8 +251,6 @@ queryHoogle keyword = do
 
 main :: IO ()
 main = do
-  {- TODO: I think that ghci sometimes uses stderr, so I guess we should go
-   - ahead and read from that one too. -}
   (Just hin, Just hout, Just herr, _) <- createProcess (proc "ghci" []) { std_out = CreatePipe, std_in = CreatePipe, std_err = CreatePipe }
 
   hSetBuffering hin NoBuffering
