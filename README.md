@@ -17,8 +17,8 @@ run with:
 
 or:
 
-   cabal install
-   ghci-in-a-new-dress
+    cabal install
+    ghci-in-a-new-dress
 
 then open a browser and go to http://127.0.0.1:3000/
 
