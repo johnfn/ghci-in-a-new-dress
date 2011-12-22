@@ -7,13 +7,16 @@
 
 ## Running
 build with:
+
     cabal configure
     cabal build
 
 run with:
+
     ./dist/build/ghci-in-a-new-dress/ghci-in-a-new-dress
 
 or:
+
    cabal install
    ghci-in-a-new-dress
 
