@@ -5,9 +5,22 @@
 
 * Hoogle (/Users/abi/Library/Haskell/ghc-7.0.3/lib/hoogle-4.2.8/bin) — The Hoogle executable ought to be in the path but not just in .bashrc but also, symlinked in /usr/bin/. Probably because createProcess runs sh, rather than bash? Or createProcess only looks in /usr/bin.
 
-This should be a .cabal file.
+## Running
+build with:
 
-# Running
+    cabal configure
+    cabal build
+
+run with:
+
+    ./dist/build/ghci-in-a-new-dress/ghci-in-a-new-dress
+
+or:
+
+    cabal install
+    ghci-in-a-new-dress
+
+then open a browser and go to http://127.0.0.1:3000/
 
 ## Features
 

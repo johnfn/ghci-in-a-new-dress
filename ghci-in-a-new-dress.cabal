@@ -1,0 +1,39 @@
+Name:                ghci-in-a-new-dress
+Version:             0.1
+--License:             BSD3
+--License-file:        LICENSE
+Author:              Abi Raja and Grant Mathews
+--Maintainer:
+Stability:           Experimental
+--Category:
+Build-type:          Simple
+Synopsis:            Pretty ghci interface in a browser
+Cabal-version:       >= 1.6
+Description: {
+Ghci in a new dress
+.
+Provides browser interface to ghci with nice syntax highlighting, etc.
+.
+Compile, run, and then open a browser and go to "http://127.0.0.1:3000/"
+}
+
+source-repository head
+  type: git
+  location: git://github.com/johnfn/ghci-in-a-new-dress.git
+--  tag: 
+
+Executable ghci-in-a-new-dress
+  Main-Is:         main.hs
+  Hs-Source-Dirs:  .
+  Other-Modules:
+  Build-depends:     base
+                   , text
+                   , bytestring
+                   , xmlhtml
+                   , process
+                   , directory
+                   , blaze-html
+                   , yesod
+                   , yesod-core
+                   , yesod-static
+  Ghc-options:

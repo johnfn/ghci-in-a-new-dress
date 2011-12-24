@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import Data.Maybe
 import Control.Concurrent
 import System.Process
-import IO
+import System.IO
 import Data.List
 import Control.Monad
 import Data.IORef
